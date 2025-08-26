@@ -55,13 +55,14 @@ def run(
     # instantiate trainer
     trainer = Seq2SeqTrainer(
         model=model,
-        tokenizer=processor.feature_extractor,
+        tokenizer=processor.tokenizer,  # <— was processor.feature_extractor
         args=training_args,
         compute_metrics=metrics.compute_metrics,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         data_collator=default_data_collator,
     )
+
     trainer.train()
 
     wandb.finish()
