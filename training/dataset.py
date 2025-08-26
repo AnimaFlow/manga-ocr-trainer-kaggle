@@ -118,47 +118,85 @@ class MangaDataset(Dataset):
     def get_transforms():
         t_medium = A.Compose(
             [
-                A.Rotate(5, border_mode=cv2.BORDER_REPLICATE, p=0.2),
-                A.Perspective((0.01, 0.05), pad_mode=cv2.BORDER_REPLICATE, p=0.2),
+                A.Rotate(limit=5, border_mode=cv2.BORDER_REPLICATE, p=0.2),
+
+                # v2: use 'scale' and 'border_mode' (pad_mode removed)
+                A.Perspective(scale=(0.01, 0.05), border_mode=cv2.BORDER_REPLICATE, keep_size=True, p=0.2),
+
                 A.InvertImg(p=0.05),
+
+                # v2: use scale_range + interpolation_pair (dict)
                 A.OneOf(
                     [
-                        A.Downscale(0.25, 0.5, interpolation=cv2.INTER_LINEAR),
-                        A.Downscale(0.25, 0.5, interpolation=cv2.INTER_NEAREST),
+                        A.Downscale(
+                            scale_range=(0.25, 0.5),
+                            interpolation_pair={"downscale": cv2.INTER_LINEAR, "upscale": cv2.INTER_LINEAR},
+                        ),
+                        A.Downscale(
+                            scale_range=(0.25, 0.5),
+                            interpolation_pair={"downscale": cv2.INTER_NEAREST, "upscale": cv2.INTER_NEAREST},
+                        ),
                     ],
                     p=0.1,
                 ),
-                A.Blur(p=0.2),
+
+                A.Blur(blur_limit=(5, 9), p=0.2),  # keep odd kernel sizes
                 A.Sharpen(p=0.2),
-                A.RandomBrightnessContrast(p=0.5),
-                A.GaussNoise((50, 200), p=0.3),
-                A.ImageCompression(0, 30, p=0.1),
+
+                A.RandomBrightnessContrast(
+                    brightness_limit=0.2,  # tweak as you like
+                    contrast_limit=0.2,
+                    p=0.5,
+                ),
+
+                A.GaussNoise(var_limit=(50, 200), p=0.3),
+
+                # v2: prefer quality_range or explicit bounds
+                A.ImageCompression(quality_lower=0, quality_upper=30, p=0.1),
+
                 A.ToGray(always_apply=True),
             ]
         )
 
         t_heavy = A.Compose(
             [
-                A.Rotate(10, border_mode=cv2.BORDER_REPLICATE, p=0.2),
-                A.Perspective((0.01, 0.05), pad_mode=cv2.BORDER_REPLICATE, p=0.2),
+                A.Rotate(limit=10, border_mode=cv2.BORDER_REPLICATE, p=0.2),
+                A.Perspective(scale=(0.01, 0.05), border_mode=cv2.BORDER_REPLICATE, keep_size=True, p=0.2),
                 A.InvertImg(p=0.05),
+
                 A.OneOf(
                     [
-                        A.Downscale(0.1, 0.2, interpolation=cv2.INTER_LINEAR),
-                        A.Downscale(0.1, 0.2, interpolation=cv2.INTER_NEAREST),
+                        A.Downscale(
+                            scale_range=(0.1, 0.2),
+                            interpolation_pair={"downscale": cv2.INTER_LINEAR, "upscale": cv2.INTER_LINEAR},
+                        ),
+                        A.Downscale(
+                            scale_range=(0.1, 0.2),
+                            interpolation_pair={"downscale": cv2.INTER_NEAREST, "upscale": cv2.INTER_NEAREST},
+                        ),
                     ],
                     p=0.1,
                 ),
-                A.Blur((4, 9), p=0.5),
+
+                A.Blur(blur_limit=(5, 9), p=0.5),
                 A.Sharpen(p=0.5),
-                A.RandomBrightnessContrast(0.8, 0.8, p=1),
-                A.GaussNoise((1000, 10000), p=0.3),
-                A.ImageCompression(0, 10, p=0.5),
+
+                A.RandomBrightnessContrast(
+                    brightness_limit=0.8,
+                    contrast_limit=0.8,
+                    p=1.0,
+                ),
+
+                A.GaussNoise(var_limit=(1000, 10000), p=0.3),
+                A.ImageCompression(quality_lower=0, quality_upper=10, p=0.5),
+
                 A.ToGray(always_apply=True),
             ]
         )
 
         return t_medium, t_heavy
+
+
 
 
 if __name__ == "__main__":

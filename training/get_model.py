@@ -11,7 +11,7 @@ from transformers import (
 
 def get_processor(encoder_name, decoder_name):
     # modern, non-deprecated components
-    image_processor = AutoImageProcessor.from_pretrained(encoder_name)
+    image_processor = AutoImageProcessor.from_pretrained(encoder_name, use_fast=True)
     tokenizer = AutoTokenizer.from_pretrained(decoder_name)
     processor = TrOCRProcessor(image_processor=image_processor, tokenizer=tokenizer)
     return processor
