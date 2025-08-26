@@ -5,8 +5,15 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
+import os
+import re
 
 from envpath.env import MANGA109_ROOT, DATA_SYNTHETIC_ROOT
+
+def join_posix(root, rel):
+    # split on / or \\, then join under root using POSIX separators
+    parts = re.split(r"[\\/]+", str(rel))
+    return str(root.joinpath(*parts))
 
 
 class MangaDataset(Dataset):
@@ -47,17 +54,22 @@ class MangaDataset(Dataset):
 
         df = pd.read_csv(MANGA109_ROOT / "data.csv")
         df = df[df.split == split].reset_index(drop=True)
-        df["path"] = df.crop_path.apply(lambda x: str(MANGA109_ROOT / x))
+        df["path"] = df.crop_path.apply(lambda x: join_posix(MANGA109_ROOT, x))  # noqa: F821
         df = df[["path", "text"]]
         df["synthetic"] = False
         data.append(df)
 
         data = pd.concat(data, ignore_index=True)
 
+        data["path"] = data["path"].apply(lambda p: p.replace("\\", "/"))
+        missing = (~data["path"].map(os.path.exists)).sum()
+        if missing:
+            print(f"⚠️ Skipping {missing} rows with missing images (bad paths).")
+        data = data[data["path"].map(os.path.exists)].reset_index(drop=True)
+
         if limit_size:
             data = data.iloc[:limit_size]
         self.data = data
-
         print(f"Dataset {split}: {len(self.data)}")
 
         self.augment = augment
@@ -104,15 +116,26 @@ class MangaDataset(Dataset):
 
     @staticmethod
     def read_image(processor, path, transform=None):
-        img = cv2.imread(str(path))
+        # normalize path & read
+        path = str(path).replace("\\", "/")
+        img = cv2.imread(path, cv2.IMREAD_COLOR)  # always 3-ch BGR
+        if img is None:
+            raise FileNotFoundError(f"Image not found or unreadable: {path}")
 
-        if transform is None:
-            transform = A.ToGray(always_apply=True)
+        # Albumentations v2: no always_apply → use p=1.0 if you want grayscale
+        transform = transform or A.ToGray(p=1.0)
 
         img = transform(image=img)["image"]
 
+        # Ensure RGB 3-channel for HF processors
+        if img.ndim == 2:  # single-channel
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        else:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
         pixel_values = processor(img, return_tensors="pt").pixel_values
         return pixel_values.squeeze()
+
 
     @staticmethod
     def get_transforms():
