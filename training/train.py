@@ -43,7 +43,7 @@ def run(
         per_device_eval_batch_size=batch_size,
         fp16=fp16,
         fp16_full_eval=fp16,
-        dataloader_num_workers=16,
+        dataloader_num_workers=4,
         output_dir=TRAIN_ROOT,
         logging_steps=10,
         save_steps=20000,
