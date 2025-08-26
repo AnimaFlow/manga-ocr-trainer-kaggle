@@ -119,13 +119,9 @@ class MangaDataset(Dataset):
         t_medium = A.Compose(
             [
                 A.Rotate(limit=5, border_mode=cv2.BORDER_REPLICATE, p=0.2),
-
-                # v2: use 'scale' and 'border_mode' (pad_mode removed)
                 A.Perspective(scale=(0.01, 0.05), border_mode=cv2.BORDER_REPLICATE, keep_size=True, p=0.2),
-
                 A.InvertImg(p=0.05),
 
-                # v2: use scale_range + interpolation_pair (dict)
                 A.OneOf(
                     [
                         A.Downscale(
@@ -140,21 +136,23 @@ class MangaDataset(Dataset):
                     p=0.1,
                 ),
 
-                A.Blur(blur_limit=(5, 9), p=0.2),  # keep odd kernel sizes
+                A.Blur(blur_limit=(5, 9), p=0.2),
                 A.Sharpen(p=0.2),
 
                 A.RandomBrightnessContrast(
-                    brightness_limit=0.2,  # tweak as you like
+                    brightness_limit=0.2,
                     contrast_limit=0.2,
                     p=0.5,
                 ),
 
-                A.GaussNoise(std_range=(7.1, 14.2), mean_range=(0, 0), p=0.3),
+                # noise between 1%–4% of pixel range
+                A.GaussNoise(std_range=(0.01, 0.04), mean_range=(0.0, 0.0), p=0.3),
 
-                # v2: prefer quality_range or explicit bounds
-                A.ImageCompression(quality_range=(0, 30), p=0.1),
+                # quality must be 1–100
+                A.ImageCompression(quality_range=(10, 30), p=0.1),
 
-                A.ToGray(always_apply=True),
+                # always apply grayscale
+                A.ToGray(p=1.0),
             ]
         )
 
@@ -187,14 +185,16 @@ class MangaDataset(Dataset):
                     p=1.0,
                 ),
 
-                A.GaussNoise(std_range=(31.6, 100.0), mean_range=(0, 0), p=0.3),
-                A.ImageCompression(quality_range=(0, 10), p=0.5),
+                # stronger noise: ~5%–12% of pixel range
+                A.GaussNoise(std_range=(0.05, 0.12), mean_range=(0.0, 0.0), p=0.3),
 
+                A.ImageCompression(quality_range=(5, 15), p=0.5),
                 A.ToGray(p=1.0),
             ]
         )
 
         return t_medium, t_heavy
+
 
 
 if __name__ == "__main__":
