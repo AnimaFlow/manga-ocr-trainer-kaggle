@@ -149,10 +149,10 @@ class MangaDataset(Dataset):
                     p=0.5,
                 ),
 
-                A.GaussNoise(var_limit=(50, 200), p=0.3),
+                A.GaussNoise(std_range=(7.1, 14.2), mean_range=(0, 0), p=0.3),
 
                 # v2: prefer quality_range or explicit bounds
-                A.ImageCompression(quality_lower=0, quality_upper=30, p=0.1),
+                A.ImageCompression(quality_range=(0, 30), p=0.1),
 
                 A.ToGray(always_apply=True),
             ]
@@ -187,16 +187,14 @@ class MangaDataset(Dataset):
                     p=1.0,
                 ),
 
-                A.GaussNoise(var_limit=(1000, 10000), p=0.3),
-                A.ImageCompression(quality_lower=0, quality_upper=10, p=0.5),
+                A.GaussNoise(std_range=(31.6, 100.0), mean_range=(0, 0), p=0.3),
+                A.ImageCompression(quality_range=(0, 10), p=0.5),
 
-                A.ToGray(always_apply=True),
+                A.ToGray(p=1.0),
             ]
         )
 
         return t_medium, t_heavy
-
-
 
 
 if __name__ == "__main__":
