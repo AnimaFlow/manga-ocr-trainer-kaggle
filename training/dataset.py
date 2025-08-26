@@ -7,13 +7,30 @@ import torch
 from torch.utils.data import Dataset
 import os
 import re
+from pathlib import Path, PurePosixPath
 
 from envpath.env import MANGA109_ROOT, DATA_SYNTHETIC_ROOT
 
-def join_posix(root, rel):
-    # split on / or \\, then join under root using POSIX separators
-    parts = re.split(r"[\\/]+", str(rel))
-    return str(root.joinpath(*parts))
+def resolve_under(root: Path, rel) -> str:
+    """
+    Join `rel` under `root`, fixing backslashes and removing a duplicated
+    leading root segment (e.g., root=.../Manga109s and rel starts with 'Manga109s/...').
+    """
+    root = Path(root)
+    rel = str(rel).replace("\\", "/")            # fix Windows slashes
+    rel_p = PurePosixPath(rel)
+
+    # If rel starts with the same name as the root dir, drop that first segment
+    if rel_p.parts and rel_p.parts[0] == root.name:
+        rel_p = PurePosixPath(*rel_p.parts[1:])
+
+    joined = root.joinpath(*rel_p.parts)
+    # Also collapse accidental double root segments like /Manga109s/Manga109s/
+    dbl = f"/{root.name}/{root.name}/"
+    s = str(joined).replace("\\", "/")
+    if dbl in s:
+        s = s.replace(dbl, f"/{root.name}/")
+    return s
 
 
 class MangaDataset(Dataset):
@@ -54,22 +71,23 @@ class MangaDataset(Dataset):
 
         df = pd.read_csv(MANGA109_ROOT / "data.csv")
         df = df[df.split == split].reset_index(drop=True)
-        df["path"] = df.crop_path.apply(lambda x: join_posix(MANGA109_ROOT, x))  # noqa: F821
+        df["path"] = df.crop_path.apply(lambda x: resolve_under(MANGA109_ROOT, x))  # noqa: F821
         df = df[["path", "text"]]
         df["synthetic"] = False
         data.append(df)
 
         data = pd.concat(data, ignore_index=True)
 
-        data["path"] = data["path"].apply(lambda p: p.replace("\\", "/"))
-        missing = (~data["path"].map(os.path.exists)).sum()
-        if missing:
-            print(f"⚠️ Skipping {missing} rows with missing images (bad paths).")
-        data = data[data["path"].map(os.path.exists)].reset_index(drop=True)
+        data["exists"] = data["path"].map(os.path.exists)
+        if not data["exists"].all():
+            bad = data.loc[~data["exists"], "path"].head(5).tolist()
+            print(f"⚠️ Missing {(~data['exists']).sum()} files. First few:\n  - " + "\n  - ".join(bad))
+        data = data[data["exists"]].drop(columns=["exists"]).reset_index(drop=True)
 
         if limit_size:
             data = data.iloc[:limit_size]
         self.data = data
+
         print(f"Dataset {split}: {len(self.data)}")
 
         self.augment = augment
@@ -116,19 +134,17 @@ class MangaDataset(Dataset):
 
     @staticmethod
     def read_image(processor, path, transform=None):
-        # normalize path & read
         path = str(path).replace("\\", "/")
-        img = cv2.imread(path, cv2.IMREAD_COLOR)  # always 3-ch BGR
+        img = cv2.imread(path, cv2.IMREAD_COLOR)  # force 3-ch BGR
         if img is None:
             raise FileNotFoundError(f"Image not found or unreadable: {path}")
 
-        # Albumentations v2: no always_apply → use p=1.0 if you want grayscale
-        transform = transform or A.ToGray(p=1.0)
+        transform = transform or A.ToGray(p=1.0)  # v2: no always_apply
 
         img = transform(image=img)["image"]
 
-        # Ensure RGB 3-channel for HF processors
-        if img.ndim == 2:  # single-channel
+        # Ensure RGB for HF processors
+        if img.ndim == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
         else:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
