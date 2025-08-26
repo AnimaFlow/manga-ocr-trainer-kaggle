@@ -1,10 +1,11 @@
 import numpy as np
-from datasets import load_metric
+import evaluate  # instead of datasets.load_metric
 
 
 class Metrics:
     def __init__(self, processor):
-        self.cer_metric = load_metric("cer")
+        # use evaluate.load instead of datasets.load_metric
+        self.cer_metric = evaluate.load("cer")
         self.processor = processor
 
     def compute_metrics(self, pred):
@@ -21,7 +22,9 @@ class Metrics:
 
         results = {}
         try:
-            results["cer"] = self.cer_metric.compute(predictions=pred_str, references=label_str)
+            results["cer"] = self.cer_metric.compute(
+                predictions=pred_str, references=label_str
+            )
         except Exception as e:
             print(e)
             print(pred_str)
