@@ -48,6 +48,8 @@ def get_model(encoder_name, decoder_name, max_length, num_decoder_layers=None):
 
     # decoder special tokens & search defaults
     model.config.decoder_start_token_id = processor.tokenizer.cls_token_id
+    model.config.bos_token_id = processor.tokenizer.cls_token_id
+    model.config.decoder.bos_token_id = processor.tokenizer.cls_token_id
     model.config.pad_token_id = processor.tokenizer.pad_token_id
     model.config.vocab_size = model.config.decoder.vocab_size
     model.config.eos_token_id = processor.tokenizer.sep_token_id
