@@ -74,9 +74,6 @@ def run(
         dataloader_persistent_workers=True,
         # Gradient accumulation for better GPU utilization
         gradient_accumulation_steps=1,
-        # Mixed precision settings
-        bf16=False,  # Use fp16 instead
-        tf32=False,
         # Memory optimization
         # Distributed training
         ddp_find_unused_parameters=False,
