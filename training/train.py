@@ -76,7 +76,7 @@ def run(
         gradient_accumulation_steps=1,
         # Mixed precision settings
         bf16=False,  # Use fp16 instead
-        tf32=True,
+        tf32=False,
         # Memory optimization
         # Distributed training
         ddp_find_unused_parameters=False,
