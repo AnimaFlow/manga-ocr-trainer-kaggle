@@ -41,6 +41,7 @@ def get_model(encoder_name, decoder_name, max_length, num_decoder_layers=None):
 
     # ----- tie together -----
     config = VisionEncoderDecoderConfig.from_encoder_decoder_configs(encoder.config, decoder.config)
+    config.model_type = decoder_config.model_type
     config.tie_word_embeddings = False
     model = VisionEncoderDecoderModel(encoder=encoder, decoder=decoder, config=config)
 

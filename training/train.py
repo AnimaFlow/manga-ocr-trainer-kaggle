@@ -75,6 +75,11 @@ def run(
 
     trainer.train()
 
+    # Save the trained model and processor components
+    trainer.save_model(str(TRAIN_ROOT))
+    processor.tokenizer.save_pretrained(str(TRAIN_ROOT))
+    processor.image_processor.save_pretrained(str(TRAIN_ROOT))
+
     wandb.finish()
 
 
