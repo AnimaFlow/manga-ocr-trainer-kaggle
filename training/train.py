@@ -21,20 +21,24 @@ except ImportError:
     IS_KAGGLE = False
 
 
+os.environ["WANDB_PROJECT"] = "manga-ocr"
+
 def run(
-    run_name="manga_deit_tiny",
+    run_name="manga_deit_tiny_hyperparam1",
     encoder_name="facebook/deit-tiny-patch16-224",
     decoder_name="cl-tohoku/bert-base-japanese-char-v2",
     max_len=300,
     num_decoder_layers=2,
-    batch_size=128,
-    num_epochs=7,
+    batch_size=8,
+    num_epochs=8,
     fp16=True,
+    grad_accum=8,
+    seval_steps=1000,
+    logging_steps=50,
 ):
     # Initialize wandb
     if secret_value_0:
         wandb.login(key=secret_value_0)
-    wandb.init(project="manga-ocr", name=run_name)
 
     model, processor = get_model(encoder_name, decoder_name, max_len, num_decoder_layers)
 
@@ -48,19 +52,31 @@ def run(
         output_dir=str(TRAIN_ROOT),
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
-        learning_rate=1e-5,
+        learning_rate=1.61803e-4,
+        weight_decay=0.05,
+        warmup_ratio=0.06,
+        max_grad_norm=1.0,
+
+
         eval_strategy="steps",
         save_strategy="steps",
-        logging_steps=10,
-        save_steps=20000,
-        eval_steps=20000,
+        logging_steps=logging_steps,
+        save_steps=seval_steps,
+        eval_steps=seval_steps,
         num_train_epochs=num_epochs,
         metric_for_best_model="eval_loss",
+        greater_is_better=False,
+
+
         fp16=fp16,
+        gradient_checkpointing=True,
         dataloader_num_workers=4,
+        dataloader_pin_memory=True,
         run_name=run_name,
-        # Gradient accumulation for better GPU utilization
-        gradient_accumulation_steps=1,
+        optim="adamw_torch_fused",
+        lr_scheduler_type="cosine",
+        gradient_accumulation_steps=grad_accum,
+        report_to="wandb",
     )
 
     # instantiate trainer
@@ -79,8 +95,6 @@ def run(
     trainer.save_model(str(TRAIN_ROOT))
     processor.tokenizer.save_pretrained(str(TRAIN_ROOT))
     processor.image_processor.save_pretrained(str(TRAIN_ROOT))
-
-    wandb.finish()
 
 
 if __name__ == "__main__":
