@@ -96,3 +96,9 @@ To generate synthetic data:
 4. Optionally manually label your fonts with `common/regular/special` labels.
 5. Provide `<DATA_SYNTHETIC_ROOT>/lines/*.csv`.
 6. Run `synthetic_data_generator/run_generate.py` for each package.
+
+
+### TODO
+
+- [ ] Add support for google colab training
+- [ ] Add support for distributed training (multi gpu) 
