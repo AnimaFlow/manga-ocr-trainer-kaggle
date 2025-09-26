@@ -2,12 +2,12 @@
 
 ```
 assets/                       # assets (see description below)
-manga_ocr/                    # release code (inference only)
-manga_ocr_dev/                # development code
-   env.py                     # global constants
+manga-ocr-trainer-kaggle/                # development code
+   envpath/                   # environment variables setup
    data/                      # data preprocessing
    synthetic_data_generator/  # generation of synthetic image-text pairs
    training/                  # model training
+   create_folders.py          # creates folders for assets
 ```
 
 ## assets
