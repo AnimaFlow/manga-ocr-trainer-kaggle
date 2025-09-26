@@ -1,6 +1,9 @@
 import fire
 import wandb
 import os
+import random
+import numpy as np
+import torch
 from transformers import Trainer, TrainingArguments
 from transformers.data.data_collator import default_data_collator
 
@@ -24,18 +27,27 @@ except ImportError:
 os.environ["WANDB_PROJECT"] = "manga-ocr"
 
 def run(
-    run_name="manga_deit_tiny_hyperparam2",
+    run_name="manga_deit_tiny_hyperparam3",
     encoder_name="facebook/deit-tiny-patch16-224",
     decoder_name="cl-tohoku/bert-base-japanese-char-v2",
     max_len=300,
     num_decoder_layers=2,
-    batch_size=32,
+    batch_size=64,
     num_epochs=8,
     fp16=True,
     grad_accum=2,
     seval_steps=10000,
     logging_steps=100,
+    seed=42
 ):
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
     # Initialize wandb
     if secret_value_0:
         wandb.login(key=secret_value_0)
