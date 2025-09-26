@@ -77,13 +77,19 @@ def export_crops():
                 data.append(row)
     data = pd.DataFrame(data)
 
-    n_test = int(0.1 * len(data))
-    data["split"] = "train"
-    data.loc[data.sample(len(data)).iloc[:n_test].index, "split"] = "test"
-
-
+    # Create crop_path first
+    data["crop_path"] = data["id"].apply(lambda x: str(crops_root / x) + ".png")
+    
+    # Process paths
     data.page_path = data.page_path.apply(lambda x: "/".join(Path(x).parts[-4:]))
     data.crop_path = data.crop_path.apply(lambda x: "/".join(Path(x).parts[-2:]))
+    
+    # Split data into train/test
+    n_test = int(0.1 * len(data))
+    data["split"] = "train"
+    data.loc[data.sample(len(data), random_state=42).iloc[:n_test].index, "split"] = "test"
+    
+    # Save the data
     data.to_csv(MANGA109_ROOT / "data.csv", index=False)
 
     for page_path, boxes in tqdm(data.groupby("page_path"), total=data.page_path.nunique(), desc="[3/3] Exporting crops - Processing pages (extracting crops from pages)"):
