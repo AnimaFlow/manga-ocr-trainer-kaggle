@@ -24,17 +24,17 @@ except ImportError:
 os.environ["WANDB_PROJECT"] = "manga-ocr"
 
 def run(
-    run_name="manga_deit_tiny_hyperparam1",
+    run_name="manga_deit_tiny_hyperparam2",
     encoder_name="facebook/deit-tiny-patch16-224",
     decoder_name="cl-tohoku/bert-base-japanese-char-v2",
     max_len=300,
     num_decoder_layers=2,
-    batch_size=8,
+    batch_size=32,
     num_epochs=8,
     fp16=True,
-    grad_accum=8,
-    seval_steps=1000,
-    logging_steps=50,
+    grad_accum=2,
+    seval_steps=10000,
+    logging_steps=100,
 ):
     # Initialize wandb
     if secret_value_0:
@@ -69,9 +69,9 @@ def run(
 
 
         fp16=fp16,
-        gradient_checkpointing=True,
         dataloader_num_workers=4,
         dataloader_pin_memory=True,
+        dataloader_persistent_workers=True,
         run_name=run_name,
         optim="adamw_torch_fused",
         lr_scheduler_type="cosine",

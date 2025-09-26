@@ -4,7 +4,7 @@ from transformers import (
     AutoModel,
     TrOCRProcessor,
     VisionEncoderDecoderModel,
-    AutoImageProcessor,   # <— use ImageProcessor
+    AutoImageProcessor,  
     AutoTokenizer,
     VisionEncoderDecoderConfig,
 )
