@@ -26,7 +26,7 @@ def export_frames():
     books = get_books()
 
     data = []
-    for book in tqdm(books.itertuples(), total=len(books)):
+    for book in tqdm(books.itertuples(), total=len(books), desc="[1/3] Exporting frames - Processing books"):
         tree = ET.parse(book.annotations)
         root = tree.getroot()
         for page in root.findall("./pages/page"):
@@ -57,7 +57,7 @@ def export_crops():
     books = get_books()
 
     data = []
-    for book in tqdm(books.itertuples(), total=len(books)):
+    for book in tqdm(books.itertuples(), total=len(books), desc="[2/3] Exporting crops - Processing books"):
         tree = ET.parse(book.annotations)
         root = tree.getroot()
         for page in root.findall("./pages/page"):
@@ -81,13 +81,12 @@ def export_crops():
     data["split"] = "train"
     data.loc[data.sample(len(data)).iloc[:n_test].index, "split"] = "test"
 
-    data["crop_path"] = str(crops_root) + "\\" + data.id + ".png"
 
     data.page_path = data.page_path.apply(lambda x: "/".join(Path(x).parts[-4:]))
     data.crop_path = data.crop_path.apply(lambda x: "/".join(Path(x).parts[-2:]))
     data.to_csv(MANGA109_ROOT / "data.csv", index=False)
 
-    for page_path, boxes in tqdm(data.groupby("page_path"), total=data.page_path.nunique()):
+    for page_path, boxes in tqdm(data.groupby("page_path"), total=data.page_path.nunique(), desc="[3/3] Exporting crops - Processing pages (extracting crops from pages)"):
         img = cv2.imread(str(MANGA109_ROOT / page_path))
 
         for box in boxes.itertuples():
