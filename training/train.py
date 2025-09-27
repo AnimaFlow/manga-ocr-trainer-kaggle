@@ -12,25 +12,24 @@ from .dataset import MangaDataset
 from .get_model import get_model
 from .metrics import Metrics
 
+IS_COLAB  = "COLAB_RELEASE_TAG" in os.environ  # true only inside a real Colab runtime
+IS_KAGGLE = "KAGGLE_KERNEL_RUN_TYPE" in os.environ or os.path.exists("/kaggle/input")
 
-# Kaggle-specific setup
-try:
-    from kaggle_secrets import UserSecretsClient
-    user_secrets = UserSecretsClient()
-    secret_value_0 = user_secrets.get_secret("WANDB_API_KEY")
-    IS_KAGGLE = True
-except ImportError:
-    secret_value_0 = os.environ.get("WANDB_API_KEY", "")
-    IS_KAGGLE = False
+WANDB_API_KEY = os.environ.get("WANDB_API_KEY", "")
 
-# Colab-specific setup
-try:
-    from google.colab import userdata
-    secret_value_0 = userdata.get('WANDB_API_KEY')
-    IS_COLAB = True
-except ImportError:
-    secret_value_0 = os.environ.get("WANDB_API_KEY", "")
-    IS_COLAB = False
+if IS_KAGGLE and not WANDB_API_KEY:
+    try:
+        from kaggle_secrets import UserSecretsClient
+        WANDB_API_KEY = UserSecretsClient().get_secret("WANDB_API_KEY") or WANDB_API_KEY
+    except Exception:
+        pass  
+
+if IS_COLAB and not WANDB_API_KEY:
+    try:
+        from google.colab import userdata
+        WANDB_API_KEY = userdata.get("WANDB_API_KEY") or WANDB_API_KEY
+    except Exception:
+        pass
 
 
 os.environ["WANDB_PROJECT"] = "manga-ocr"
@@ -57,9 +56,13 @@ def run(
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-    # Initialize wandb
-    if IS_KAGGLE or IS_COLAB:
-        wandb.login(key=secret_value_0)
+    if WANDB_API_KEY:
+        try:
+            wandb.login(key=WANDB_API_KEY)
+        except Exception as e:
+            print(f"[WARN] wandb.login failed: {e}")
+    else:
+        print("[INFO] WANDB_API_KEY not found; proceeding without W&B login.")
 
     model, processor = get_model(encoder_name, decoder_name, max_len, num_decoder_layers)
 
