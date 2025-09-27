@@ -23,6 +23,15 @@ except ImportError:
     secret_value_0 = os.environ.get("WANDB_API_KEY", "")
     IS_KAGGLE = False
 
+# Colab-specific setup
+try:
+    from google.colab import userdata
+    secret_value_0 = userdata.get('WANDB_API_KEY')
+    IS_COLAB = True
+except ImportError:
+    secret_value_0 = os.environ.get("WANDB_API_KEY", "")
+    IS_COLAB = False
+
 
 os.environ["WANDB_PROJECT"] = "manga-ocr"
 
@@ -49,7 +58,7 @@ def run(
     torch.backends.cudnn.benchmark = False
 
     # Initialize wandb
-    if secret_value_0:
+    if IS_KAGGLE or IS_COLAB:
         wandb.login(key=secret_value_0)
 
     model, processor = get_model(encoder_name, decoder_name, max_len, num_decoder_layers)

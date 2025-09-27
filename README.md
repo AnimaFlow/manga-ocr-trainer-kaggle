@@ -1,8 +1,11 @@
+# manga-ocr-trainer-kaggle
+This project aims to build OCR models that can accurately extract text from manga pages, handling the unique challenges of stylized fonts, decorative text, and varied image backgrounds commonly found in manga content. for now, it is focused on supporting kaggle kernels.
+
 # Project structure
 
 ```
 assets/                       # assets (see description below)
-manga-ocr-trainer-kaggle/                # development code
+manga-ocr-trainer-kaggle/     # development code
    envpath/                   # environment variables setup
    data/                      # data preprocessing
    synthetic_data_generator/  # generation of synthetic image-text pairs
@@ -19,9 +22,9 @@ csv with columns:
 - num_chars: number of supported characters
 - label: common/regular/special (used to sample regular fonts more often than special)
 
-List of fonts with metadata used by synthetic data generator.
+List of fonts with metadata used by synthetic data generator.  
 Provided file is just an example, you have to generate similar file for your own set of fonts,
-using `manga_ocr_dev/synthetic_data_generator/scan_fonts.py` script.
+using `manga-ocr-trainer-kaggle/synthetic_data_generator/scan_fonts.py` script.
 Note that `label` will be filled with `regular` by default. You have to label your special fonts manually.
 
 ### lines_example.csv
@@ -60,7 +63,7 @@ List of all characters supported by tokenizer.
     ```
 3. Preprocess Manga109-s with `data/process_manga109s.py`
 4. Optionally generate synthetic data (see below)
-5. Train with `manga_ocr_dev/training/train.py`
+5. Train with `manga-ocr-trainer-kaggle/training/train.py`
 
 # Synthetic data generation
 
@@ -100,5 +103,5 @@ To generate synthetic data:
 
 ### TODO
 
-- [ ] Add support for google colab training
+- [x] Add support for google colab training 
 - [ ] Add support for distributed training (multi gpu) 
