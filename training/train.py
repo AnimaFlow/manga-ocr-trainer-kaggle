@@ -4,7 +4,7 @@ import os
 import random
 import numpy as np
 import torch
-from transformers import Trainer, TrainingArguments
+from transformers import Trainer, TrainingArguments, TrainerCallback , EarlyStoppingCallback
 from transformers.data.data_collator import default_data_collator
 
 from envpath.env import TRAIN_ROOT
@@ -34,8 +34,23 @@ if IS_COLAB and not WANDB_API_KEY:
 
 os.environ["WANDB_PROJECT"] = "manga-ocr"
 
+class SaveProcessorCallback(TrainerCallback):
+    def __init__(self, processor):
+        self.processor = processor
+
+    def on_save(self, args, state, control, **kwargs):
+        checkpoint_dir = os.path.join(args.output_dir, f"checkpoint-{state.global_step}")
+        if os.path.exists(checkpoint_dir):
+            self._save_processor_components(checkpoint_dir)
+
+    def _save_processor_components(self, save_dir):
+        self.processor.tokenizer.save_pretrained(save_dir)
+        self.processor.image_processor.save_pretrained(save_dir)
+        self.processor.save_pretrained(save_dir)
+
+
 def run(
-    run_name="manga_deit_tiny_hyperparam3",
+    run_name="manga_deit_tiny_hyperparam3_exp",
     encoder_name="facebook/deit-tiny-patch16-224",
     decoder_name="cl-tohoku/bert-base-japanese-char-v2",
     max_len=300,
