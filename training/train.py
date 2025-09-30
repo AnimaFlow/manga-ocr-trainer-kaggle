@@ -132,15 +132,30 @@ def run(
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         data_collator=default_data_collator,
+        callbacks=[
+            EarlyStoppingCallback(
+                early_stopping_patience=early_stopping_patience,
+                early_stopping_threshold=early_stopping_threshold
+            ),
+            SaveProcessorCallback(processor)
+        ]
     )
 
     trainer.train()
 
-    # Save the trained model and processor components
-    trainer.save_model(str(TRAIN_ROOT))
-    processor.tokenizer.save_pretrained(str(TRAIN_ROOT))
-    processor.image_processor.save_pretrained(str(TRAIN_ROOT))
+    final_model_dir = os.path.join(str(TRAIN_ROOT), "final_model")
+    os.makedirs(final_model_dir, exist_ok=True)
 
+    trainer.save_model(final_model_dir)
+    processor.tokenizer.save_pretrained(final_model_dir)
+    processor.image_processor.save_pretrained(final_model_dir)
+
+    print(f"\n final model saved to: {final_model_dir}")
+    print("model components saved:")
+    print("model weights: config.json, pytorch_model.bin")
+    print("tokenizer: tokenizer_config.json, vocab.txt, etc.")
+    print("image processor: preprocessor_config.json")
+    print(f"\n checkpoints saved in: {str(TRAIN_ROOT)}/checkpoint-*")
 
 if __name__ == "__main__":
     fire.Fire(run)
