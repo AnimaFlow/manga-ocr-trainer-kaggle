@@ -12,7 +12,7 @@ from .dataset import MangaDataset
 from .get_model import get_model
 from .metrics import Metrics
 
-IS_COLAB  = "COLAB_RELEASE_TAG" in os.environ  # true only inside a real Colab runtime
+IS_COLAB  = "COLAB_RELEASE_TAG" in os.environ
 IS_KAGGLE = "KAGGLE_KERNEL_RUN_TYPE" in os.environ or os.path.exists("/kaggle/input")
 
 WANDB_API_KEY = os.environ.get("WANDB_API_KEY", "")
