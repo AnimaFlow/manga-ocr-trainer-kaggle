@@ -119,9 +119,12 @@ def run(
         lr_scheduler_type="cosine",
         gradient_accumulation_steps=grad_accum,
         report_to="wandb",
+
+        save_total_limit=2,
+        predict_with_generate=True,
+        generation_max_length=max_len,
     )
 
-    # instantiate trainer
     trainer = Trainer(
         model=model,
         args=training_args,
