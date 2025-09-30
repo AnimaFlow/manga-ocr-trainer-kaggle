@@ -61,7 +61,9 @@ def run(
     grad_accum=2,
     seval_steps=10000,
     logging_steps=100,
-    seed=42
+    seed=42,
+    early_stopping_patience=2,
+    early_stopping_threshold=0.0
 ):
 
     random.seed(seed)
@@ -103,8 +105,9 @@ def run(
         save_steps=seval_steps,
         eval_steps=seval_steps,
         num_train_epochs=num_epochs,
-        metric_for_best_model="eval_loss",
+        metric_for_best_model="cer",
         greater_is_better=False,
+        load_best_model_at_end=True,        
 
 
         fp16=fp16,
