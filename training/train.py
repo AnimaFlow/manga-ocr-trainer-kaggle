@@ -107,7 +107,7 @@ def run(
         num_train_epochs=num_epochs,
         metric_for_best_model="cer",
         greater_is_better=False,
-        load_best_model_at_end=True,        
+        load_best_model_at_end=True,
 
 
         fp16=fp16,
@@ -118,7 +118,7 @@ def run(
         optim="adamw_torch_fused",
         lr_scheduler_type="cosine",
         gradient_accumulation_steps=grad_accum,
-        report_to="wandb",
+        report_to="none",
 
         save_total_limit=2,
         predict_with_generate=True,
