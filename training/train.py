@@ -4,7 +4,7 @@ import os
 import random
 import numpy as np
 import torch
-from transformers import Trainer, TrainingArguments, TrainerCallback , EarlyStoppingCallback
+from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments, TrainerCallback , EarlyStoppingCallback
 from transformers.data.data_collator import default_data_collator
 
 from envpath.env import TRAIN_ROOT
@@ -89,7 +89,7 @@ def run(
 
     metrics = Metrics(processor)
 
-    training_args = TrainingArguments(
+    training_args = Seq2SeqTrainingArguments(
         output_dir=str(TRAIN_ROOT),
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
@@ -125,7 +125,7 @@ def run(
         generation_max_length=max_len,
     )
 
-    trainer = Trainer(
+    trainer = Seq2SeqTrainer(
         model=model,
         args=training_args,
         compute_metrics=metrics.compute_metrics,
