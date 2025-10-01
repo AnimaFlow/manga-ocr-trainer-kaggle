@@ -57,7 +57,7 @@ def run(
     num_decoder_layers=2,
     batch_size=64,
     num_epochs=8,
-    fp16=True,
+    fp16=False,
     grad_accum=2,
     seval_steps=10000,
     logging_steps=100,
@@ -111,9 +111,9 @@ def run(
 
 
         fp16=fp16,
-        dataloader_num_workers=4,
-        dataloader_pin_memory=True,
-        dataloader_persistent_workers=True,
+        dataloader_num_workers=2,
+        dataloader_pin_memory=False,
+        dataloader_persistent_workers=False,
         run_name=run_name,
         optim="adamw_torch_fused",
         lr_scheduler_type="cosine",
