@@ -50,7 +50,7 @@ class SaveProcessorCallback(TrainerCallback):
 
 
 def run(
-    run_name="manga_deit_tiny_hyperparam3_exp",
+    run_name="manga_deit_tiny_hyperparam3.5_exp",
     encoder_name="facebook/deit-tiny-patch16-224",
     decoder_name="cl-tohoku/bert-base-japanese-char-v2",
     max_len=300,
@@ -116,9 +116,9 @@ def run(
 
 
         fp16=torch.cuda.is_available() and fp16,
-        dataloader_num_workers=2,
+        dataloader_num_workers=4,
         dataloader_pin_memory=torch.cuda.is_available(),
-        dataloader_persistent_workers=False,
+        dataloader_persistent_workers=True,
         run_name=run_name,
         optim="adamw_torch_fused",
         lr_scheduler_type="cosine",
