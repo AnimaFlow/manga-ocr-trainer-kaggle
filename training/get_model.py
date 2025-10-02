@@ -28,16 +28,25 @@ def get_model(encoder_name, decoder_name, max_length, num_decoder_layers=None):
     decoder_config.max_length = max_length
     decoder_config.is_decoder = True
     decoder_config.add_cross_attention = True
+
+    if num_decoder_layers is not None:
+        # Set the correct number of layers BEFORE creating the model
+        decoder_config.num_hidden_layers = num_decoder_layers
+
     decoder = AutoModelForCausalLM.from_config(decoder_config)
 
     if num_decoder_layers is not None:
         if decoder_config.model_type == "bert":
-            decoder.bert.encoder.layer = decoder.bert.encoder.layer[-num_decoder_layers:]
+            # Only modify layers if we need fewer than the default
+            original_layers = len(decoder.bert.encoder.layer)
+            if num_decoder_layers < original_layers:
+                decoder.bert.encoder.layer = decoder.bert.encoder.layer[-num_decoder_layers:]
         elif decoder_config.model_type in ("roberta", "xlm-roberta"):
-            decoder.roberta.encoder.layer = decoder.roberta.encoder.layer[-num_decoder_layers:]
+            original_layers = len(decoder.roberta.encoder.layer)
+            if num_decoder_layers < original_layers:
+                decoder.roberta.encoder.layer = decoder.roberta.encoder.layer[-num_decoder_layers:]
         else:
             raise ValueError(f"Unsupported model_type: {decoder_config.model_type}")
-        decoder_config.num_hidden_layers = num_decoder_layers
 
     # ----- tie together -----
     config = VisionEncoderDecoderConfig.from_encoder_decoder_configs(encoder.config, decoder.config)

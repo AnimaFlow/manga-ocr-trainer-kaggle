@@ -81,7 +81,12 @@ def run(
     else:
         print("[INFO] WANDB_API_KEY not found; proceeding without W&B login.")
 
+    # Set device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
     model, processor = get_model(encoder_name, decoder_name, max_len, num_decoder_layers)
+    model = model.to(device)
 
     # keep package 0 for validation
     train_dataset = MangaDataset(processor, "train", max_len, augment=True, skip_packages=[0])
@@ -110,9 +115,9 @@ def run(
         load_best_model_at_end=True,
 
 
-        fp16=fp16,
+        fp16=torch.cuda.is_available() and fp16,
         dataloader_num_workers=2,
-        dataloader_pin_memory=False,
+        dataloader_pin_memory=torch.cuda.is_available(),
         dataloader_persistent_workers=False,
         run_name=run_name,
         optim="adamw_torch_fused",
